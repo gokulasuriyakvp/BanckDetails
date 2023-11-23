@@ -56,7 +56,11 @@ class DatabaseHelper {
       whereArgs: [id],
     );
   }
-
+  Future<int> deleteBankDetails(int id, String tableName) async {
+    return await _db.delete(
+      tableName,
+      where: '$columnId = ?',
+      whereArgs: [id],
+    );
+  }
 }
-
-

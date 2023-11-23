@@ -4,24 +4,49 @@ import 'package:flutter_bank_details/bank_details_model.dart';
 import 'package:flutter_bank_details/database_helper.dart';
 import 'package:flutter_bank_details/main.dart';
 
-
 class EditBankDetailsFormScreen extends StatefulWidget {
   const EditBankDetailsFormScreen({super.key});
 
   @override
-  State<EditBankDetailsFormScreen> createState() => _EditBankDetailsFormScreenState();
+  State<EditBankDetailsFormScreen> createState() =>
+      _EditBankDetailsFormScreenState();
 }
 
 class _EditBankDetailsFormScreenState extends State<EditBankDetailsFormScreen> {
-
   var _bankNameController = TextEditingController();
-  var _branchNameController =TextEditingController();
-  var _accountTypeController =TextEditingController();
-  var _accountNoController =TextEditingController();
-  var _IFSCCodeController =TextEditingController();
+  var _branchNameController = TextEditingController();
+  var _accountTypeController = TextEditingController();
+  var _accountNoController = TextEditingController();
+  var _IFSCCodeController = TextEditingController();
 
   bool firstTimeFlag = false;
   int _selectedId = 0;
+
+  _deleteFormDialog(BuildContext context) {
+    return showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (param) {
+          return AlertDialog(
+            actions: <Widget>[
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  print('--------------> Delete Button Clicked');
+                  _delete();
+                },
+                child: const Text('Delete'),
+              )
+            ],
+            title: const Text('Are you sure you want to delete this?'),
+          );
+        });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +55,8 @@ class _EditBankDetailsFormScreenState extends State<EditBankDetailsFormScreen> {
 
       firstTimeFlag = true;
 
-      final bankDetails = ModalRoute.of(context)!.settings.arguments as BankDetailsModel;
+      final bankDetails =
+      ModalRoute.of(context)!.settings.arguments as BankDetailsModel;
 
       print('----------->Received Data');
 
@@ -51,7 +77,21 @@ class _EditBankDetailsFormScreenState extends State<EditBankDetailsFormScreen> {
     }
     return Scaffold(
       appBar: AppBar(
-        title: Text('Bank Details Form Screen'),
+          title: Text('Bank Details Form Screen'),
+          actions: [
+            PopupMenuButton<int>(
+              itemBuilder: (context) => [
+                PopupMenuItem(value: 1, child: Text("Delete")),
+              ],
+              elevation: 2,
+              onSelected: (value) {
+                if (value == 1) {
+                  print('Delete option clicked');
+                  _deleteFormDialog(context);
+                }
+              },
+            ),
+          ]
       ),
       body: SingleChildScrollView(
         child: Center(
@@ -66,8 +106,7 @@ class _EditBankDetailsFormScreenState extends State<EditBankDetailsFormScreen> {
                         borderSide: BorderSide(),
                       ),
                       labelText: 'Bank Name',
-                      hintText: 'Enter Bank Name'
-                  ),
+                      hintText: 'Enter Bank Name'),
                 ),
                 SizedBox(
                   height: 25,
@@ -79,8 +118,7 @@ class _EditBankDetailsFormScreenState extends State<EditBankDetailsFormScreen> {
                         borderSide: BorderSide(),
                       ),
                       labelText: 'Branch Name',
-                      hintText: 'Enter Branch Name'
-                  ),
+                      hintText: 'Enter Branch Name'),
                 ),
                 SizedBox(
                   height: 25,
@@ -92,8 +130,7 @@ class _EditBankDetailsFormScreenState extends State<EditBankDetailsFormScreen> {
                         borderSide: BorderSide(),
                       ),
                       labelText: 'Account Type',
-                      hintText: 'Enter Account Type'
-                  ),
+                      hintText: 'Enter Account Type'),
                 ),
                 SizedBox(
                   height: 25,
@@ -105,8 +142,7 @@ class _EditBankDetailsFormScreenState extends State<EditBankDetailsFormScreen> {
                         borderSide: BorderSide(),
                       ),
                       labelText: 'Account No',
-                      hintText: 'Enter Account No'
-                  ),
+                      hintText: 'Enter Account No'),
                 ),
                 SizedBox(
                   height: 25,
@@ -118,17 +154,18 @@ class _EditBankDetailsFormScreenState extends State<EditBankDetailsFormScreen> {
                         borderSide: BorderSide(),
                       ),
                       labelText: 'IFSCCode',
-                      hintText: 'Enter IFSCCode'
-                  ),
+                      hintText: 'Enter IFSCCode'),
                 ),
                 SizedBox(
                   height: 25,
                 ),
-                ElevatedButton(onPressed: (){
-                  print('------------>update Button Clicked');
-                  _update();
-                },
-                  child: Text('Update'),)
+                ElevatedButton(
+                  onPressed: () {
+                    print('------------>update Button Clicked');
+                    _update();
+                  },
+                  child: Text('Update'),
+                )
               ],
             ),
           ),
@@ -137,7 +174,7 @@ class _EditBankDetailsFormScreenState extends State<EditBankDetailsFormScreen> {
     );
   }
 
-  void _update() async{
+  void _update() async {
     print('------------>_update');
     print('---------------> Selected ID: $_selectedId');
     print('-------------> Bank Name:${_bankNameController.text}');
@@ -155,8 +192,8 @@ class _EditBankDetailsFormScreenState extends State<EditBankDetailsFormScreen> {
       DatabaseHelper.columnIFSCCode: _IFSCCodeController.text,
     };
 
-    final result = await dbHelper.updateBankDetails(
-        row, DatabaseHelper.bankDetailsTable);
+    final result =
+    await dbHelper.updateBankDetails(row, DatabaseHelper.bankDetailsTable);
 
     debugPrint('--------> updated Row Id: $result');
 
@@ -175,8 +212,21 @@ class _EditBankDetailsFormScreenState extends State<EditBankDetailsFormScreen> {
     ScaffoldMessenger.of(context)
         .showSnackBar(new SnackBar(content: new Text(message)));
   }
+  void _delete() async{
+    print('--------------> _delete');
+
+    final result = await dbHelper.deleteBankDetails(_selectedId, DatabaseHelper.bankDetailsTable);
+
+    debugPrint('-----------------> Deleted Row Id: $result');
+
+    if (result > 0) {
+      _showSuccessSnackBar(context, 'Deleted.');
+      Navigator.pop(context);
+    }
+
+    setState(() {
+      Navigator.of(context).pushReplacement(MaterialPageRoute(
+          builder: (context) => BankDetailsListScreen()));
+    });
+  }
 }
-
-
-
-
